@@ -9,7 +9,7 @@
 
 #define ASTRA_BTC_PRICE_DEFAULT_URL          "https://mempool.space/api/v1/prices"
 #define ASTRA_BTC_PRICE_DEFAULT_TIMEOUT_MS   3000
-#define ASTRA_BTC_PRICE_DEFAULT_MAX_AGE_SEC  360
+#define ASTRA_BTC_PRICE_DEFAULT_MAX_AGE_SEC  480
 
 
 //==================================================================
