@@ -98,6 +98,9 @@ if errorlevel 1 goto :failed
 rem Register NSSM as the Windows service wrapper and configure automatic recovery.
 "%INSTALL_DIR%\nssm.exe" install "%SERVICE_NAME%" "%PYTHON_EXE%" "%INSTALL_DIR%\astra_mempool_pressure_api.py"
 if errorlevel 1 goto :failed
+rem Run as LocalSystem to avoid a stored per-user password and logon error 1069.
+"%INSTALL_DIR%\nssm.exe" set "%SERVICE_NAME%" ObjectName LocalSystem
+if errorlevel 1 goto :failed
 "%INSTALL_DIR%\nssm.exe" set "%SERVICE_NAME%" DisplayName "Astra Mempool Pressure Service"
 if errorlevel 1 goto :failed
 "%INSTALL_DIR%\nssm.exe" set "%SERVICE_NAME%" Description "Bitcoin Mempool Pressure Provider for MetaTrader 5"

@@ -28,7 +28,7 @@ Serviço HTTP local para fornecer métricas de congestionamento do Bitcoin a um 
 4. Ele registra `AstraMempoolService` com inicialização automática e configura três ações do SCM: primeira, segunda e terceira falhas reiniciam em 30 segundos. O NSSM também reinicia o processo monitorado com atraso de 30 segundos.
 5. O instalador espera até 20 segundos pelo `/health`; se a aplicação não responder, informa falha de inicialização e remove o registro parcial do serviço.
 
-O download do NSSM exige Internet e é feito de `https://nssm.cc/release/nssm-2.24.zip`. A aplicação instalada fica em `%ProgramFiles%\AstraMempoolService`; portanto, continua disponível sem depender da pasta de dados ou do login do MetaTrader. O processo roda com a conta de sistema local padrão do serviço. O endpoint fica acessível apenas na máquina local.
+O download do NSSM exige Internet e é feito de `https://nssm.cc/release/nssm-2.24.zip`. A aplicação instalada fica em `%ProgramFiles%\AstraMempoolService`; portanto, continua disponível sem depender da pasta de dados ou do login do MetaTrader. O instalador configura explicitamente a conta `LocalSystem`, sem senha por usuário. O endpoint fica acessível apenas na máquina local.
 
 ## Inicialização manual
 
@@ -177,6 +177,7 @@ Execute `uninstall_service.bat` como Administrador. O serviço é parado e remov
 - **Serviço ausente (SCM 1060):** significa que `AstraMempoolService` não foi registrado. Execute `install_service.bat` elevado; a API não inicia sozinha só por existir na pasta.
 - **Python não encontrado ou versão antiga:** instale Python 3.10+ e habilite o launcher `py` ou a inclusão de Python no `PATH`; rode o instalador novamente.
 - **Instalador requer Administrador:** ele cria serviço e grava em `%ProgramFiles%`; execute com elevação.
+- **SCM 1069 / falha de logon:** o instalador usa `LocalSystem` para não depender da senha da conta pessoal. Para reparar um serviço existente como Administrador, rode `sc.exe config AstraMempoolService obj= LocalSystem`; depois libere a porta 8765 do processo manual e execute `install_service.bat` novamente.
 - **Download do NSSM falha:** verifique conectividade/proxy e acesso HTTPS a `nssm.cc`; o serviço não será registrado sem o wrapper.
 - **Porta ocupada:** rode `check_port.bat`. Para diagnóstico manual, execute `netstat -ano | findstr 8765` e consulte o nome com `tasklist /FI "PID eq <PID>"`. Finalize apenas se reconhecer o processo: `taskkill /F /PID <PID>`. O modo serviço não mata processos automaticamente.
 - **Serviço não inicia:** consulte `sc.exe query AstraMempoolService`, `logs\astra.log`, `logs\service-stderr.log` e `logs\service-stdout.log` na pasta instalada. Confirme que `config.json` está válido e que `127.0.0.1:8765` está livre.
