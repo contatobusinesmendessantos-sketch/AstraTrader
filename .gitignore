@@ -1,0 +1,15 @@
+# MetaTrader compiled outputs
+*.ex5
+
+# Runtime and tester data
+/Files/
+/logs/
+/Tester/
+/Profiles/
+*.log
+*.log.html
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

@@ -167,6 +167,7 @@ private:
          m_data.state,
          m_data.zscore,
          m_data.percentile,
+         m_data.percentile_available,
          m_data.momentum,
          m_data.acceleration,
          m_data.analysis_ready,
@@ -502,12 +503,12 @@ public:
             m_data.zscore,
             4
          ),
+         " | PercentileAvailable=",
+         m_data.percentile_available ? "true" : "false",
          " | Percentile=",
-         DoubleToString(
-            m_data.percentile,
-            2
-         ),
-         "%",
+         m_data.percentile_available
+         ? DoubleToString(m_data.percentile, 2) + "%"
+         : "MISSING",
          " | APIAge=",
          IntegerToString(
             m_data.age_seconds
@@ -629,6 +630,11 @@ public:
    double GetPercentile()
    {
       return m_data.percentile;
+   }
+
+   bool IsPercentileAvailable()
+   {
+      return m_data.percentile_available;
    }
 
 

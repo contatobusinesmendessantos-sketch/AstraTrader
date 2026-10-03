@@ -464,6 +464,7 @@ public:
       const string state,
       const double zscore,
       const double percentile,
+      const bool percentile_available,
       const double momentum,
       const double acceleration,
       const bool analysis_ready,
@@ -558,12 +559,18 @@ public:
       // PERCENTIL
       // -------------------------------------------------------------
 
-      SetLabel(
-         Name("PERCENTILE"),
-         StringFormat(
+      string percentileText = "Percentile: --";
+      if(percentile_available)
+      {
+         percentileText = StringFormat(
             "Percentile: %.2f%%",
             percentile
-         ),
+         );
+      }
+
+      SetLabel(
+         Name("PERCENTILE"),
+         percentileText,
          m_neutral
       );
 

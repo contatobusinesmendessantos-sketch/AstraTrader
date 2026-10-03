@@ -36,12 +36,14 @@ public:
    string   contract_version;
 
    string   timestamp_utc;
+   string   api_state;
    string   state;
 
    double   pressure_index;
    double   anomaly_score;
    double   zscore;
    double   percentile;
+   bool     percentile_available;
    double   momentum;
    double   acceleration;
 
@@ -60,12 +62,14 @@ public:
       contract_version= "";
 
       timestamp_utc   = "";
+      api_state       = "";
       state           = "UNKNOWN";
 
       pressure_index  = 0.0;
       anomaly_score   = 0.0;
       zscore          = 0.0;
       percentile      = 0.0;
+      percentile_available = false;
       momentum        = 0.0;
       acceleration    = 0.0;
 
@@ -89,6 +93,23 @@ private:
    int    m_timeout_ms;
 
    MempoolPressureData m_data;
+
+
+   string NormalizeState(
+      const string api_state
+   ) const
+   {
+      if(api_state == "LOW" || api_state == "NORMAL")
+         return "NORMAL";
+
+      if(api_state == "HIGH")
+         return "ALERTA";
+
+      if(api_state == "EXTREME")
+         return "EXTREMO";
+
+      return "UNKNOWN";
+   }
 
 
    // ---------------------------------------------------------
@@ -410,11 +431,20 @@ private:
          m_data.zscore
       );
 
-      ExtractNumber(
+      m_data.percentile_available = ExtractNumber(
          json,
          "percentile",
          m_data.percentile
       );
+
+      if(m_data.percentile_available &&
+         (m_data.percentile < 0.0 || m_data.percentile > 100.0))
+      {
+         m_data.last_error =
+            "percentile fora do intervalo 0..100.";
+
+         return false;
+      }
 
       ExtractNumber(
          json,
@@ -435,7 +465,7 @@ private:
       if(!ExtractString(
          json,
          "state",
-         m_data.state
+         m_data.api_state
       ))
       {
          m_data.last_error =
@@ -445,10 +475,10 @@ private:
       }
 
       if(
-         m_data.state != "LOW" &&
-         m_data.state != "NORMAL" &&
-         m_data.state != "HIGH" &&
-         m_data.state != "EXTREME"
+         m_data.api_state != "LOW" &&
+         m_data.api_state != "NORMAL" &&
+         m_data.api_state != "HIGH" &&
+         m_data.api_state != "EXTREME"
       )
       {
          m_data.last_error =
@@ -456,6 +486,8 @@ private:
 
          return false;
       }
+
+      m_data.state = NormalizeState(m_data.api_state);
 
       if(!ExtractNumber(
          json,
@@ -549,6 +581,13 @@ private:
 
 
 public:
+
+   bool ParsePayload(
+      const string json
+   )
+   {
+      return ParseResponse(json);
+   }
 
    // ---------------------------------------------------------
    // CONSTRUCTOR
