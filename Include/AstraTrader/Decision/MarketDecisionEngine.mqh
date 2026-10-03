@@ -1836,26 +1836,6 @@ public:
       );
 
 
-      if(c.bos)
-      {
-         if(c.structuralBias == BIAS_BULLISH)
-            bull += 15.0;
-         else
-         if(c.structuralBias == BIAS_BEARISH)
-            bear += 15.0;
-      }
-
-
-      if(c.choch)
-      {
-         if(c.structuralBias == BIAS_BULLISH)
-            bull += 8.0;
-         else
-         if(c.structuralBias == BIAS_BEARISH)
-            bear += 8.0;
-      }
-
-
       //==============================================================
       // LIQUIDITY
       //==============================================================
@@ -1918,21 +1898,11 @@ public:
          bear
       );
 
-      if(
-         c.springDetected ||
-         c.sosDetected
-      )
-      {
+      if(c.springDetected)
          bull += 10.0;
-      }
 
-      if(
-         c.upthrustDetected ||
-         c.sowDetected
-      )
-      {
+      if(c.upthrustDetected)
          bear += 10.0;
-      }
 
 
       //==============================================================
@@ -2015,13 +1985,6 @@ public:
          bear
       );
 
-      if(c.momentumBullish)
-         bull += 5.0;
-
-      if(c.momentumBearish)
-         bear += 5.0;
-
-
       //==============================================================
       // VOLATILITY
       //==============================================================
@@ -2058,23 +2021,6 @@ public:
       //==============================================================
       // AI STRUCTURE
       //==============================================================
-
-
-      //==============================================================
-      // PREDICTION
-      //==============================================================
-
-      if(c.aiState == LAYER_VALID &&
-         c.aiProbabilityBuy != c.aiProbabilitySell)
-      {
-         AddMagnitudeContribution(
-            c.aiConsensusScore,
-            c.aiProbabilityBuy > c.aiProbabilitySell,
-            c.aiProbabilitySell > c.aiProbabilityBuy,
-            bull,
-            bear
-         );
-      }
 
 
       //==============================================================

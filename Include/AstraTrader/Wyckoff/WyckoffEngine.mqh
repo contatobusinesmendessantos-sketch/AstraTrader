@@ -233,12 +233,6 @@ private:
          );
       }
 
-      if(
-         ctx.bos &&
-         ctx.structuralBias == BIAS_BULLISH
-      )
-         score += 10.0;
-
       score =
          Clamp(
             score,
@@ -308,12 +302,6 @@ private:
             10.0
          );
       }
-
-      if(
-         ctx.bos &&
-         ctx.structuralBias == BIAS_BEARISH
-      )
-         score += 10.0;
 
       score =
          Clamp(
@@ -475,12 +463,6 @@ private:
       if(ctx.structuralBias == BIAS_BULLISH)
          score += 25.0;
 
-      if(
-         ctx.bos &&
-         ctx.structuralBias == BIAS_BULLISH
-      )
-         score += 25.0;
-
       if(IsBullishCandle(ctx))
          score += 10.0;
 
@@ -537,12 +519,6 @@ private:
       double score = 0.0;
 
       if(ctx.structuralBias == BIAS_BEARISH)
-         score += 25.0;
-
-      if(
-         ctx.bos &&
-         ctx.structuralBias == BIAS_BEARISH
-      )
          score += 25.0;
 
       if(IsBearishCandle(ctx))
