@@ -25,6 +25,45 @@ private:
    bool m_allowSyntheticFallback;
    bool m_allowLegacyFileFallback;
 
+   bool IsValidOHLC(
+      const MqlRates &bar
+   ) const
+   {
+      if(bar.time <= 0)
+         return false;
+
+      if(
+         !MathIsValidNumber(bar.open) ||
+         !MathIsValidNumber(bar.high) ||
+         !MathIsValidNumber(bar.low) ||
+         !MathIsValidNumber(bar.close) ||
+         bar.open == EMPTY_VALUE ||
+         bar.high == EMPTY_VALUE ||
+         bar.low == EMPTY_VALUE ||
+         bar.close == EMPTY_VALUE
+      )
+      {
+         return false;
+      }
+
+      if(
+         bar.open <= 0.0 ||
+         bar.high <= 0.0 ||
+         bar.low <= 0.0 ||
+         bar.close <= 0.0 ||
+         bar.high < bar.low ||
+         bar.high < bar.open ||
+         bar.high < bar.close ||
+         bar.low > bar.open ||
+         bar.low > bar.close
+      )
+      {
+         return false;
+      }
+
+      return true;
+   }
+
 
    //=================================================================
    // DOUBLE
@@ -264,34 +303,7 @@ private:
          // VALIDAÇÃO
          //==========================================================
 
-         if(bar.time <= 0)
-            continue;
-
-         if(bar.open <= 0.0)
-            continue;
-
-         if(bar.high <= 0.0)
-            continue;
-
-         if(bar.low <= 0.0)
-            continue;
-
-         if(bar.close <= 0.0)
-            continue;
-
-         if(bar.high < bar.low)
-            continue;
-
-         if(bar.high < bar.open)
-            continue;
-
-         if(bar.high < bar.close)
-            continue;
-
-         if(bar.low > bar.open)
-            continue;
-
-         if(bar.low > bar.close)
+         if(!IsValidOHLC(bar))
             continue;
 
 
@@ -508,6 +520,8 @@ private:
 
       context.dataQuality =
          ASTRA_DATA_GOOD;
+      context.marketDataSource =
+         "EXTERNAL_OTC";
 
 
       //==============================================================
@@ -636,6 +650,9 @@ public:
          return false;
       }
 
+      context.syntheticMarketBarsCount =
+         0;
+
 
       //==============================================================
       // TIMEFRAME
@@ -752,7 +769,7 @@ public:
 
       MqlRates bars[];
 
-      const int count =
+      int count =
          ParseCandles(
             json,
             bars
@@ -946,23 +963,48 @@ public:
                      i
                   ];
             }
+
+            context.syntheticMarketBarsCount =
+               syntheticCount - copyCount;
+         }
+         else
+         {
+            context.syntheticMarketBarsCount =
+               syntheticCount;
          }
 
+         const int copiedSynthetic =
+            ArrayCopy(
+               bars,
+               extended
+            );
 
-         ArrayCopy(
-            bars,
-            extended
-         );
+         count =
+            ArraySize(bars);
+
+         if(
+            copiedSynthetic != syntheticCount ||
+            count != syntheticCount
+         )
+         {
+            context.validationMessage =
+               "ExternalDataEngine: falha ao aplicar "
+               "fallback sintetico.";
+
+            return false;
+         }
 
          PrintFormat(
             "[ExternalDataEngine][WARNING] "
             "Fallback sintetico habilitado | "
             "Symbol=%s | TF=%s | Candles=%d | "
+            "SyntheticCandles=%d | SyntheticRange=oldest_tail | "
             "File=%s | "
             "NAO USAR PARA BACKTEST DE PERFORMANCE",
             context.symbol,
             tfName,
-            syntheticCount,
+            count,
+            context.syntheticMarketBarsCount,
             usedFilename
          );
       }
@@ -1016,6 +1058,27 @@ public:
          return false;
       }
 
+      if(!context.ValidateRateArray(context.marketBars))
+      {
+         context.marketHistoryReady =
+            false;
+
+         context.marketDataReady =
+            false;
+
+         context.dataQuality =
+            ASTRA_DATA_INVALID;
+
+         context.validationMessage =
+            "ExternalDataEngine: historico contem "
+            "valores numericos invalidos.";
+
+         return false;
+      }
+
+      context.marketDataSource =
+         "EXTERNAL_OTC";
+
 
       //==============================================================
       // LOG
@@ -1024,10 +1087,14 @@ public:
       PrintFormat(
          "[ExternalDataEngine] OTC carregado | "
          "Symbol=%s | TF=%s | Candles=%d | "
+         "SyntheticCandles=%d | SyntheticRange=oldest_tail | "
+         "Source=%s | "
          "Current=%.5f | Previous=%.5f | File=%s",
          context.symbol,
          tfName,
          context.marketBarsCount,
+         context.syntheticMarketBarsCount,
+         context.marketDataSource,
          context.marketBars[0].close,
          context.marketBars[1].close,
          usedFilename

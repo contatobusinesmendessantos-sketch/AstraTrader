@@ -169,6 +169,19 @@ private:
          return false;
       }
 
+      for(int i = 0; i < copied; i++)
+      {
+         if(!ValidateOHLC(rates[i]))
+         {
+            ArrayResize(
+               rates,
+               0
+            );
+
+            return false;
+         }
+      }
+
       return true;
    }
 
@@ -270,32 +283,34 @@ private:
       if(bar.time <= 0)
          return false;
 
-      if(bar.open <= 0.0)
+      if(
+         !MathIsValidNumber(bar.open) ||
+         !MathIsValidNumber(bar.high) ||
+         !MathIsValidNumber(bar.low) ||
+         !MathIsValidNumber(bar.close) ||
+         bar.open == EMPTY_VALUE ||
+         bar.high == EMPTY_VALUE ||
+         bar.low == EMPTY_VALUE ||
+         bar.close == EMPTY_VALUE
+      )
+      {
          return false;
+      }
 
-      if(bar.high <= 0.0)
+      if(
+         bar.open <= 0.0 ||
+         bar.high <= 0.0 ||
+         bar.low <= 0.0 ||
+         bar.close <= 0.0 ||
+         bar.high < bar.low ||
+         bar.high < bar.open ||
+         bar.high < bar.close ||
+         bar.low > bar.open ||
+         bar.low > bar.close
+      )
+      {
          return false;
-
-      if(bar.low <= 0.0)
-         return false;
-
-      if(bar.close <= 0.0)
-         return false;
-
-      if(bar.high < bar.low)
-         return false;
-
-      if(bar.high < bar.open)
-         return false;
-
-      if(bar.high < bar.close)
-         return false;
-
-      if(bar.low > bar.open)
-         return false;
-
-      if(bar.low > bar.close)
-         return false;
+      }
 
       return true;
    }
@@ -313,17 +328,14 @@ private:
       if(count < 3)
          return false;
 
-      if(ArraySize(rates) < 3)
+      if(count != ArraySize(rates))
          return false;
 
-      if(!ValidateOHLC(rates[0]))
-         return false;
-
-      if(!ValidateOHLC(rates[1]))
-         return false;
-
-      if(!ValidateOHLC(rates[2]))
-         return false;
+      for(int i = 0; i < count; i++)
+      {
+         if(!ValidateOHLC(rates[i]))
+            return false;
+      }
 
       return true;
    }
@@ -363,6 +375,38 @@ private:
 
       if(context.primaryTF == PERIOD_CURRENT)
          return false;
+
+      if(
+         !MathIsValidNumber(context.point) ||
+         context.point == EMPTY_VALUE ||
+         !MathIsValidNumber(context.tickSize) ||
+         context.tickSize == EMPTY_VALUE ||
+         !MathIsValidNumber(context.tickValue) ||
+         context.tickValue == EMPTY_VALUE ||
+         !MathIsValidNumber(context.bid) ||
+         context.bid == EMPTY_VALUE ||
+         !MathIsValidNumber(context.ask) ||
+         context.ask == EMPTY_VALUE ||
+         !MathIsValidNumber(context.price) ||
+         context.price == EMPTY_VALUE ||
+         !MathIsValidNumber(context.spreadPoints) ||
+         context.spreadPoints == EMPTY_VALUE ||
+         !MathIsValidNumber(context.atr) ||
+         context.atr == EMPTY_VALUE ||
+         !MathIsValidNumber(context.volatility) ||
+         context.volatility == EMPTY_VALUE ||
+         !MathIsValidNumber(context.open) ||
+         context.open == EMPTY_VALUE ||
+         !MathIsValidNumber(context.high) ||
+         context.high == EMPTY_VALUE ||
+         !MathIsValidNumber(context.low) ||
+         context.low == EMPTY_VALUE ||
+         !MathIsValidNumber(context.close) ||
+         context.close == EMPTY_VALUE
+      )
+      {
+         return false;
+      }
 
       if(context.point <= 0.0)
          return false;
@@ -420,6 +464,10 @@ private:
    {
       context.dataQuality =
          ASTRA_DATA_UNKNOWN;
+      context.marketDataSource =
+         "";
+      context.syntheticMarketBarsCount =
+         0;
 
       context.bid =
          0.0;
@@ -574,6 +622,7 @@ private:
 
 
    bool LoadMTFSeries(
+      const AnalysisContext &context,
       const string symbol,
       const ENUM_TIMEFRAMES timeframe,
       MqlRates &rates[]
@@ -1253,11 +1302,11 @@ public:
 
       context.mtfDataReady = false;
 
-      LoadMTFSeries(symbol, PERIOD_D1, context.mtfD1);
-      LoadMTFSeries(symbol, PERIOD_H4, context.mtfH4);
-      LoadMTFSeries(symbol, PERIOD_H1, context.mtfH1);
-      LoadMTFSeries(symbol, PERIOD_M15, context.mtfM15);
-      LoadMTFSeries(symbol, PERIOD_M5, context.mtfM5);
+      LoadMTFSeries(context, symbol, PERIOD_D1, context.mtfD1);
+      LoadMTFSeries(context, symbol, PERIOD_H4, context.mtfH4);
+      LoadMTFSeries(context, symbol, PERIOD_H1, context.mtfH1);
+      LoadMTFSeries(context, symbol, PERIOD_M15, context.mtfM15);
+      LoadMTFSeries(context, symbol, PERIOD_M5, context.mtfM5);
 
       context.mtfDataReady =
          ArraySize(context.mtfD1) > 0 &&
@@ -1271,6 +1320,10 @@ public:
 
       context.contextValid =
          true;
+      context.marketDataSource =
+         "MT5";
+      context.syntheticMarketBarsCount =
+         0;
 
 
       //==============================================================

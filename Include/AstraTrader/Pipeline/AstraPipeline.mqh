@@ -2074,17 +2074,19 @@ public:
       // EXTERNAL DATA
       //================================================================
 
-      const bool externalOk =
-         m_externalDataEngine.Process(c);
+      const bool otcSymbol =
+         StringFind(
+            c.symbol,
+            "OTC"
+         ) >= 0;
 
-      if(!externalOk)
+      bool externalOk =
+         false;
+
+      if(otcSymbol)
       {
-         PrintFormat(
-            "[ASTRA][Cycle=%I64u][EXTERNAL_DATA] "
-            "WARNING | ExternalData indisponivel; "
-            "continuando com dados primarios.",
-            c.cycleId
-         );
+         externalOk =
+            m_externalDataEngine.Process(c);
       }
 
 
@@ -2092,27 +2094,64 @@ public:
       // MARKET DATA
       //================================================================
 
-      if(
-         !m_marketDataEngine.Process(c)
-      )
+      if(externalOk)
       {
-         Reject(
-            c,
-            "ANALYSIS",
-            c.validationMessage == ""
-               ? "market_data_failed"
-               : c.validationMessage,
-            ASTRA_BLOCK_INVALID_DATA
-         );
+         if(!c.Validate())
+         {
+            Reject(
+               c,
+               "ANALYSIS",
+               c.validationMessage == ""
+                  ? "external_market_data_invalid"
+                  : c.validationMessage,
+               ASTRA_BLOCK_INVALID_DATA
+            );
 
-         return false;
+            return false;
+         }
+
+         PrintFormat(
+            "[ASTRA][Cycle=%I64u][MARKET_DATA] "
+            "Source=EXTERNAL_OTC | SyntheticCandles=%d",
+            c.cycleId,
+            c.syntheticMarketBarsCount
+         );
+      }
+      else
+      {
+         if(otcSymbol)
+         {
+            PrintFormat(
+               "[ASTRA][Cycle=%I64u][MARKET_DATA] "
+               "External OTC unavailable/invalid; "
+               "explicitly attempting MT5 fallback.",
+               c.cycleId
+            );
+         }
+
+         if(!m_marketDataEngine.Process(c))
+         {
+            Reject(
+               c,
+               "ANALYSIS",
+               c.validationMessage == ""
+                  ? "market_data_failed"
+                  : c.validationMessage,
+               ASTRA_BLOCK_INVALID_DATA
+            );
+
+            return false;
+         }
+
+         PrintFormat(
+            "[ASTRA][Cycle=%I64u][MARKET_DATA] "
+            "Source=MT5%s",
+            c.cycleId,
+            otcSymbol ? " | FallbackFor=EXTERNAL_OTC" : ""
+         );
       }
 
-
-      if(
-         c.dataQuality ==
-         ASTRA_DATA_INVALID
-      )
+      if(c.dataQuality == ASTRA_DATA_INVALID)
       {
          Reject(
             c,

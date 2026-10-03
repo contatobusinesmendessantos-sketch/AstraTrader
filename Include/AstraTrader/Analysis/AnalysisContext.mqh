@@ -99,6 +99,8 @@ public:
 
    double              atr;
    double              volatility;
+   string              marketDataSource;
+   int                 syntheticMarketBarsCount;
 
    double              high;
    double              low;
@@ -943,6 +945,8 @@ public:
 
       atr                 = 0.0;
       volatility          = 0.0;
+      marketDataSource    = "";
+      syntheticMarketBarsCount = 0;
 
       high                = 0.0;
       low                 = 0.0;
@@ -1970,6 +1974,34 @@ public:
          return false;
       }
 
+      if(
+         !IsValidNumericValue(bid) ||
+         !IsValidNumericValue(ask) ||
+         !IsValidNumericValue(price) ||
+         !IsValidNumericValue(point) ||
+         !IsValidNumericValue(tickSize) ||
+         !IsValidNumericValue(tickValue) ||
+         !IsValidNumericValue(spreadPoints) ||
+         !IsValidNumericValue(atr) ||
+         !IsValidNumericValue(volatility) ||
+         !IsValidNumericValue(open) ||
+         !IsValidNumericValue(high) ||
+         !IsValidNumericValue(low) ||
+         !IsValidNumericValue(close)
+      )
+      {
+         contextValid =
+            false;
+
+         dataQuality =
+            ASTRA_DATA_INVALID;
+
+         validationMessage =
+            "Valor numerico nao finito ou EMPTY_VALUE.";
+
+         return false;
+      }
+
 
       //==============================================================
       // MARKET DATA
@@ -1988,6 +2020,45 @@ public:
 
          validationMessage =
             "Preco invalido.";
+
+         return false;
+      }
+
+      if(
+         !marketDataReady ||
+         !marketHistoryReady ||
+         ArraySize(marketBars) < 3 ||
+         !ValidateRateArray(marketBars)
+      )
+      {
+         contextValid =
+            false;
+
+         dataQuality =
+            ASTRA_DATA_INVALID;
+
+         validationMessage =
+            "Historico de mercado invalido ou incompleto.";
+
+         return false;
+      }
+
+      if(
+         !ValidateRateArray(mtfD1) ||
+         !ValidateRateArray(mtfH4) ||
+         !ValidateRateArray(mtfH1) ||
+         !ValidateRateArray(mtfM15) ||
+         !ValidateRateArray(mtfM5)
+      )
+      {
+         contextValid =
+            false;
+
+         dataQuality =
+            ASTRA_DATA_INVALID;
+
+         validationMessage =
+            "Historico multi-timeframe contem dados invalidos.";
 
          return false;
       }
@@ -2037,6 +2108,64 @@ public:
 
       contextValid =
          true;
+
+      return true;
+   }
+
+   bool IsValidNumericValue(
+      const double value
+   ) const
+   {
+      return (
+         MathIsValidNumber(value) &&
+         value != EMPTY_VALUE
+      );
+   }
+
+   bool IsValidMarketBar(
+      const MqlRates &bar
+   ) const
+   {
+      if(bar.time <= 0)
+         return false;
+
+      if(
+         !IsValidNumericValue(bar.open) ||
+         !IsValidNumericValue(bar.high) ||
+         !IsValidNumericValue(bar.low) ||
+         !IsValidNumericValue(bar.close)
+      )
+      {
+         return false;
+      }
+
+      if(
+         bar.open <= 0.0 ||
+         bar.high <= 0.0 ||
+         bar.low <= 0.0 ||
+         bar.close <= 0.0 ||
+         bar.high < bar.low ||
+         bar.high < bar.open ||
+         bar.high < bar.close ||
+         bar.low > bar.open ||
+         bar.low > bar.close
+      )
+      {
+         return false;
+      }
+
+      return true;
+   }
+
+   bool ValidateRateArray(
+      const MqlRates &rates[]
+   ) const
+   {
+      for(int i = 0; i < ArraySize(rates); i++)
+      {
+         if(!IsValidMarketBar(rates[i]))
+            return false;
+      }
 
       return true;
    }
