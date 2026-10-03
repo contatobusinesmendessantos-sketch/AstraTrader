@@ -468,8 +468,14 @@ private:
          ASTRA_DATA_UNKNOWN;
       context.marketDataSource =
          "";
+      context.marketDataSourceReason =
+         "";
+      context.marketDataFallbackUsed =
+         false;
       context.syntheticMarketBarsCount =
          0;
+      context.validationMessage =
+         "";
 
       context.bid =
          0.0;
@@ -1324,6 +1330,10 @@ public:
          true;
       context.marketDataSource =
          "MT5";
+      context.marketDataSourceReason =
+         "MT5_HISTORY_LOADED";
+      context.marketDataFallbackUsed =
+         false;
       context.syntheticMarketBarsCount =
          0;
 

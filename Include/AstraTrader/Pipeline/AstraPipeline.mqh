@@ -245,6 +245,7 @@ private:
    ENUM_ASTRA_POSITION_POLICY m_positionPolicy;
    int m_maxSameDirectionPositions;
    double m_maxAggregateRiskPercent;
+   bool m_allowOtcMt5Fallback;
 
    AnalysisContext m_context;
 
@@ -990,7 +991,6 @@ private:
          matchedPrice
       );
    }
-
 
    //=================================================================
    // MESMA DIREÇÃO
@@ -1872,6 +1872,9 @@ public:
 
       m_maxAggregateRiskPercent =
          ASTRA_MAX_AGGREGATE_RISK_PERCENT_DEFAULT;
+
+      m_allowOtcMt5Fallback =
+         false;
    }
 
 
@@ -2130,10 +2133,24 @@ public:
       bool externalOk =
          false;
 
+      bool externalValid =
+         false;
+
       if(otcSymbol)
       {
+         c.marketDataSource =
+            "NONE";
+         c.marketDataSourceReason =
+            "EXTERNAL_OTC_SOURCE_PENDING";
+         c.marketDataFallbackUsed =
+            false;
+
          externalOk =
             m_externalDataEngine.Process(c);
+
+         externalValid =
+            externalOk &&
+            c.Validate();
       }
 
 
@@ -2141,26 +2158,24 @@ public:
       // MARKET DATA
       //================================================================
 
-      if(externalOk)
+      if(otcSymbol && externalValid)
       {
-         if(!c.Validate())
-         {
-            Reject(
-               c,
-               "ANALYSIS",
-               c.validationMessage == ""
-                  ? "external_market_data_invalid"
-                  : c.validationMessage,
-               ASTRA_BLOCK_INVALID_DATA
-            );
-
-            return false;
-         }
+         c.marketDataSource =
+            "EXTERNAL_OTC";
+         c.marketDataSourceReason =
+            "VALID_EXTERNAL_OTC_SOURCE";
+         c.marketDataFallbackUsed =
+            false;
 
          PrintFormat(
             "[ASTRA][Cycle=%I64u][MARKET_DATA] "
-            "Source=EXTERNAL_OTC | SyntheticCandles=%d",
+            "Source=%s | Reason=%s | FallbackUsed=%s | "
+            "Bars=%d | SyntheticCandles=%d",
             c.cycleId,
+            c.marketDataSource,
+            c.marketDataSourceReason,
+            c.marketDataFallbackUsed ? "true" : "false",
+            c.marketBarsCount,
             c.syntheticMarketBarsCount
          );
       }
@@ -2168,16 +2183,74 @@ public:
       {
          if(otcSymbol)
          {
+            if(!m_allowOtcMt5Fallback)
+            {
+               c.marketDataSource =
+                  "NONE";
+               c.marketDataSourceReason =
+                  externalOk
+                  ? "EXTERNAL_OTC_INVALID_MT5_FALLBACK_NOT_AUTHORIZED"
+                  : "EXTERNAL_OTC_UNAVAILABLE_MT5_FALLBACK_NOT_AUTHORIZED";
+               c.marketDataFallbackUsed =
+                  false;
+               c.marketBarsCount =
+                  0;
+               c.marketDataBarCount =
+                  0;
+               c.marketDataReady =
+                  false;
+               c.marketHistoryReady =
+                  false;
+               c.barsAvailable =
+                  0;
+               c.syntheticMarketBarsCount =
+                  0;
+               ArrayResize(
+                  c.marketBars,
+                  0
+               );
+
+               PrintFormat(
+                  "[ASTRA][Cycle=%I64u][MARKET_DATA] "
+                  "SourceSelection=BLOCKED | Reason=%s | "
+                  "FallbackAuthorized=false | FallbackUsed=false | "
+                  "Bars=0 | SyntheticCandles=0",
+                  c.cycleId,
+                  c.marketDataSourceReason
+               );
+
+               Reject(
+                  c,
+                  "ANALYSIS",
+                  c.marketDataSourceReason,
+                  ASTRA_BLOCK_INVALID_DATA
+               );
+
+               return false;
+            }
+
             PrintFormat(
                "[ASTRA][Cycle=%I64u][MARKET_DATA] "
                "External OTC unavailable/invalid; "
-               "explicitly attempting MT5 fallback.",
-               c.cycleId
+               "MT5 fallback explicitly authorized | "
+               "ExternalProcessSucceeded=%s | Error=%s",
+               c.cycleId,
+               externalOk ? "true" : "false",
+               c.validationMessage
             );
          }
 
          if(!m_marketDataEngine.Process(c))
          {
+            c.marketDataSource =
+               "NONE";
+            c.marketDataSourceReason =
+               otcSymbol
+               ? "AUTHORIZED_MT5_FALLBACK_FAILED"
+               : "PRIMARY_MT5_SOURCE_FAILED";
+            c.marketDataFallbackUsed =
+               false;
+
             Reject(
                c,
                "ANALYSIS",
@@ -2190,11 +2263,28 @@ public:
             return false;
          }
 
+         c.marketDataSource =
+            "MT5";
+         c.marketDataSourceReason =
+            otcSymbol
+            ? (externalOk
+               ? "AUTHORIZED_MT5_FALLBACK_AFTER_INVALID_EXTERNAL_OTC"
+               : "AUTHORIZED_MT5_FALLBACK_AFTER_UNAVAILABLE_EXTERNAL_OTC")
+            : "PRIMARY_MT5_SOURCE";
+         c.marketDataFallbackUsed =
+            otcSymbol;
+
          PrintFormat(
             "[ASTRA][Cycle=%I64u][MARKET_DATA] "
-            "Source=MT5%s",
+            "Source=%s | Reason=%s | FallbackAuthorized=%s | "
+            "FallbackUsed=%s | Bars=%d | SyntheticCandles=%d",
             c.cycleId,
-            otcSymbol ? " | FallbackFor=EXTERNAL_OTC" : ""
+            c.marketDataSource,
+            c.marketDataSourceReason,
+            m_allowOtcMt5Fallback ? "true" : "false",
+            c.marketDataFallbackUsed ? "true" : "false",
+            c.marketBarsCount,
+            c.syntheticMarketBarsCount
          );
       }
 
@@ -3280,6 +3370,24 @@ public:
          "[AstraPipeline] MaxAggregateRiskPercent=%.3f",
          m_maxAggregateRiskPercent
       );
+   }
+
+   void SetAllowOtcMt5Fallback(
+      const bool allowed
+   )
+   {
+      m_allowOtcMt5Fallback =
+         allowed;
+
+      PrintFormat(
+         "[AstraPipeline] OtcMt5FallbackAllowed=%s",
+         m_allowOtcMt5Fallback ? "true" : "false"
+      );
+   }
+
+   bool IsOtcMt5FallbackAllowed() const
+   {
+      return m_allowOtcMt5Fallback;
    }
 
 

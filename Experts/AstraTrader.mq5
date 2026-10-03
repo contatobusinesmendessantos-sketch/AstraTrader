@@ -51,6 +51,8 @@ input bool            InpEnablePyramiding = true;
 input int             InpMaxSameDirectionPositions = 2;
 input double           InpMaxAggregateRiskPercent = ASTRA_MAX_AGGREGATE_RISK_PERCENT_DEFAULT;
 input string           InpDeepModelPath = "";
+// Fallback OTC para MT5 e opt-in; false bloqueia se OTC externo falhar.
+input bool             InpAllowOtcMt5Fallback = false;
 
 
 //==================================================================
@@ -69,6 +71,8 @@ struct AstraRuntimeConfiguration
    int maxSameDirectionPositionsRequested;
    int maxSameDirectionPositionsEffective;
    double maxAggregateRiskPercentEffective;
+   bool otcMt5FallbackRequested;
+   bool otcMt5FallbackEffective;
    bool modelRequested;
    string modelRequestedPath;
    bool modelActive;
@@ -169,6 +173,10 @@ void CaptureRuntimeConfiguration(
       g_pipeline.GetMaxSameDirectionPositions();
    g_runtimeConfiguration.maxAggregateRiskPercentEffective =
       g_pipeline.GetMaxAggregateRiskPercent();
+   g_runtimeConfiguration.otcMt5FallbackRequested =
+      InpAllowOtcMt5Fallback;
+   g_runtimeConfiguration.otcMt5FallbackEffective =
+      g_pipeline.IsOtcMt5FallbackAllowed();
 
    g_runtimeConfiguration.modelRequested = InpDeepModelPath != "";
    g_runtimeConfiguration.modelRequestedPath = InpDeepModelPath;
@@ -481,6 +489,10 @@ int OnInit()
       InpMaxAggregateRiskPercent
    );
 
+   g_pipeline.SetAllowOtcMt5Fallback(
+      InpAllowOtcMt5Fallback
+   );
+
    CaptureRuntimeConfiguration(tf, timerSeconds);
 
 
@@ -607,7 +619,7 @@ int OnInit()
    );
 
    PrintFormat(
-      "[ASTRA][RUNTIME_CONFIG] Magic=%I64u | RequestedTF=%s | EffectiveTF=%s | TimerSeconds=%d | ProcessOnTick=%s | PyramidingRequested=%s | PyramidingEffective=%s | MaxPositionsRequested=%d | MaxPositionsEffective=%d | MaxAggregateRiskPercent=%.6f",
+      "[ASTRA][RUNTIME_CONFIG] Magic=%I64u | RequestedTF=%s | EffectiveTF=%s | TimerSeconds=%d | ProcessOnTick=%s | PyramidingRequested=%s | PyramidingEffective=%s | MaxPositionsRequested=%d | MaxPositionsEffective=%d | MaxAggregateRiskPercent=%.6f | OtcMt5FallbackRequested=%s | OtcMt5FallbackEffective=%s",
       g_runtimeConfiguration.magicNumber,
       EnumToString(g_runtimeConfiguration.requestedTimeframe),
       EnumToString(g_runtimeConfiguration.effectiveTimeframe),
@@ -617,7 +629,9 @@ int OnInit()
       g_runtimeConfiguration.pyramidingEffective ? "true" : "false",
       g_runtimeConfiguration.maxSameDirectionPositionsRequested,
       g_runtimeConfiguration.maxSameDirectionPositionsEffective,
-      g_runtimeConfiguration.maxAggregateRiskPercentEffective
+      g_runtimeConfiguration.maxAggregateRiskPercentEffective,
+      g_runtimeConfiguration.otcMt5FallbackRequested ? "true" : "false",
+      g_runtimeConfiguration.otcMt5FallbackEffective ? "true" : "false"
    );
 
    PrintFormat(

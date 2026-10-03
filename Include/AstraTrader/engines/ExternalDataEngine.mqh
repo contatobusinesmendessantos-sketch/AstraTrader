@@ -522,6 +522,10 @@ private:
          ASTRA_DATA_GOOD;
       context.marketDataSource =
          "EXTERNAL_OTC";
+      context.marketDataSourceReason =
+         "VALID_EXTERNAL_OTC_SOURCE";
+      context.marketDataFallbackUsed =
+         false;
 
 
       //==============================================================
@@ -636,6 +640,19 @@ public:
       AnalysisContext &context
    )
    {
+      context.marketDataSource =
+         "NONE";
+      context.marketDataSourceReason =
+         "EXTERNAL_OTC_SOURCE_PENDING";
+      context.marketDataFallbackUsed =
+         false;
+      context.marketBarsCount =
+         0;
+      context.marketDataBarCount =
+         0;
+      context.syntheticMarketBarsCount =
+         0;
+
       //==============================================================
       // OTC / EXTERNAL ONLY
       //==============================================================

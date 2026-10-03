@@ -100,6 +100,8 @@ public:
    double              atr;
    double              volatility;
    string              marketDataSource;
+   string              marketDataSourceReason;
+   bool                marketDataFallbackUsed;
    int                 syntheticMarketBarsCount;
 
    double              high;
@@ -946,6 +948,8 @@ public:
       atr                 = 0.0;
       volatility          = 0.0;
       marketDataSource    = "";
+      marketDataSourceReason = "";
+      marketDataFallbackUsed = false;
       syntheticMarketBarsCount = 0;
 
       high                = 0.0;
