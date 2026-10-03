@@ -169,19 +169,6 @@ private:
          return false;
       }
 
-      for(int i = 0; i < copied; i++)
-      {
-         if(!ValidateOHLC(rates[i]))
-         {
-            ArrayResize(
-               rates,
-               0
-            );
-
-            return false;
-         }
-      }
-
       return true;
    }
 
@@ -267,6 +254,21 @@ private:
          return false;
       }
 
+      for(int i = 0; i < copied; i++)
+      {
+         if(!ValidateOHLC(rates[i]))
+         {
+            copied =
+               0;
+
+            ArrayResize(
+               rates,
+               0
+            );
+
+            return false;
+         }
+      }
 
       return true;
    }
