@@ -2190,7 +2190,7 @@ public:
                c.marketDataSourceReason =
                   externalOk
                   ? "EXTERNAL_OTC_INVALID_MT5_FALLBACK_NOT_AUTHORIZED"
-                  : "EXTERNAL_OTC_UNAVAILABLE_MT5_FALLBACK_NOT_AUTHORIZED";
+                  : "EXTERNAL_OTC_FAILED_MT5_FALLBACK_NOT_AUTHORIZED";
                c.marketDataFallbackUsed =
                   false;
                c.marketBarsCount =
@@ -2269,7 +2269,7 @@ public:
             otcSymbol
             ? (externalOk
                ? "AUTHORIZED_MT5_FALLBACK_AFTER_INVALID_EXTERNAL_OTC"
-               : "AUTHORIZED_MT5_FALLBACK_AFTER_UNAVAILABLE_EXTERNAL_OTC")
+               : "AUTHORIZED_MT5_FALLBACK_AFTER_EXTERNAL_OTC_FAILURE")
             : "PRIMARY_MT5_SOURCE";
          c.marketDataFallbackUsed =
             otcSymbol;
