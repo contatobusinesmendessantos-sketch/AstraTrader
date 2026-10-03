@@ -1744,6 +1744,13 @@ private:
 
 
       if(
+         !c.IsValidNumericValue(c.entryPrice) ||
+         !c.IsValidNumericValue(c.stopLoss) ||
+         !c.IsValidNumericValue(c.takeProfit) ||
+         !c.IsValidNumericValue(c.riskReward) ||
+         !c.IsValidNumericValue(c.lotSize) ||
+         !c.IsValidNumericValue(c.riskAmount) ||
+         !c.IsValidNumericValue(c.riskPercent) ||
          c.entryPrice <= 0.0 ||
          c.stopLoss <= 0.0 ||
          c.takeProfit <= 0.0 ||

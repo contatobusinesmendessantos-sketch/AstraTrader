@@ -2002,6 +2002,60 @@ public:
          return false;
       }
 
+      if(
+         !IsValidNumericValue(structuralScore) ||
+         !IsValidNumericValue(knowledgeScore) ||
+         !IsValidNumericValue(liquidityScore) ||
+         !IsValidNumericValue(fvgScore) ||
+         !IsValidNumericValue(smartMoneyScore) ||
+         !IsValidNumericValue(orderBlockStrength) ||
+         !IsValidNumericValue(absorptionScore) ||
+         !IsValidNumericValue(institutionalFlowScore) ||
+         !IsValidNumericValue(wyckoffScore) ||
+         !IsValidNumericValue(accumulationScore) ||
+         !IsValidNumericValue(distributionScore) ||
+         !IsValidNumericValue(trendStrength) ||
+         !IsValidNumericValue(volatilityScore) ||
+         !IsValidNumericValue(momentumScore) ||
+         !IsValidNumericValue(momentumValue) ||
+         !IsValidNumericValue(momentumAcceleration) ||
+         !IsValidNumericValue(momentumAccelerationScore) ||
+         !IsValidNumericValue(patternScore) ||
+         !IsValidNumericValue(volumeDirectionalScore) ||
+         !IsValidNumericValue(trafficLightScore) ||
+         !IsValidNumericValue(trafficBullishScore) ||
+         !IsValidNumericValue(trafficBearishScore) ||
+         !IsValidNumericValue(aiProbabilityBuy) ||
+         !IsValidNumericValue(aiProbabilitySell) ||
+         !IsValidNumericValue(aiConsensusScore) ||
+         !IsValidNumericValue(btcQuantScore) ||
+         !IsValidNumericValue(mempoolPressureIndex) ||
+         !IsValidNumericValue(mempoolAnomalyScore) ||
+         !IsValidNumericValue(mempoolZScore) ||
+         !IsValidNumericValue(mempoolPercentile) ||
+         !IsValidNumericValue(mempoolMomentum) ||
+         !IsValidNumericValue(mempoolAcceleration) ||
+         !IsValidNumericValue(buyScore) ||
+         !IsValidNumericValue(sellScore) ||
+         !IsValidNumericValue(consensusScore) ||
+         !IsValidNumericValue(confluenceScore) ||
+         !IsValidNumericValue(finalConfidence) ||
+         !IsValidNumericValue(probabilityBuy) ||
+         !IsValidNumericValue(probabilitySell)
+      )
+      {
+         contextValid =
+            false;
+
+         dataQuality =
+            ASTRA_DATA_INVALID;
+
+         validationMessage =
+            "Evidencia numerica nao finita ou EMPTY_VALUE.";
+
+         return false;
+      }
+
 
       //==============================================================
       // MARKET DATA

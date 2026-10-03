@@ -401,6 +401,26 @@ private:
 
 
       if(
+         !MathIsValidNumber(ctx.lotSize) ||
+         ctx.lotSize == EMPTY_VALUE ||
+         !MathIsValidNumber(ctx.entryPrice) ||
+         ctx.entryPrice == EMPTY_VALUE ||
+         !MathIsValidNumber(ctx.stopLoss) ||
+         ctx.stopLoss == EMPTY_VALUE ||
+         !MathIsValidNumber(ctx.takeProfit) ||
+         ctx.takeProfit == EMPTY_VALUE ||
+         !MathIsValidNumber(ctx.riskReward) ||
+         ctx.riskReward == EMPTY_VALUE
+      )
+      {
+         ctx.executionRejection =
+            "execution_non_finite_order_data";
+
+         return false;
+      }
+
+
+      if(
          ctx.decision != DECISION_BUY &&
          ctx.decision != DECISION_SELL
       )
@@ -490,6 +510,12 @@ private:
 
 
       if(
+         !MathIsValidNumber(volumeMin) ||
+         volumeMin == EMPTY_VALUE ||
+         !MathIsValidNumber(volumeMax) ||
+         volumeMax == EMPTY_VALUE ||
+         !MathIsValidNumber(volumeStep) ||
+         volumeStep == EMPTY_VALUE ||
          volumeMin <= 0.0 ||
          volumeMax <= 0.0 ||
          volumeStep <= 0.0
@@ -675,6 +701,10 @@ private:
 
 
       if(
+         !MathIsValidNumber(tick.bid) ||
+         tick.bid == EMPTY_VALUE ||
+         !MathIsValidNumber(tick.ask) ||
+         tick.ask == EMPTY_VALUE ||
          tick.bid <= 0.0 ||
          tick.ask <= 0.0 ||
          tick.ask < tick.bid
@@ -868,7 +898,11 @@ private:
          );
 
 
-      if(freeMargin <= 0.0)
+      if(
+         !MathIsValidNumber(freeMargin) ||
+         freeMargin == EMPTY_VALUE ||
+         freeMargin <= 0.0
+      )
       {
          ctx.executionRejection =
             "execution_no_free_margin";
@@ -908,7 +942,11 @@ private:
          );
 
 
-      if(price <= 0.0)
+      if(
+         !MathIsValidNumber(price) ||
+         price == EMPTY_VALUE ||
+         price <= 0.0
+      )
       {
          ctx.executionRejection =
             "execution_invalid_margin_price";
@@ -945,6 +983,17 @@ private:
                error
             );
 
+
+         return false;
+      }
+
+      if(
+         !MathIsValidNumber(requiredMargin) ||
+         requiredMargin == EMPTY_VALUE
+      )
+      {
+         ctx.executionRejection =
+            "execution_non_finite_required_margin";
 
          return false;
       }

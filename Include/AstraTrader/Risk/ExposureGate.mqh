@@ -33,7 +33,18 @@ private:
    {
       protectedPosition = false;
 
-      if(symbol == "" || volume <= 0.0 || openPrice <= 0.0 || stopLoss <= 0.0)
+      if(
+         symbol == "" ||
+         !MathIsValidNumber(volume) ||
+         volume == EMPTY_VALUE ||
+         !MathIsValidNumber(openPrice) ||
+         openPrice == EMPTY_VALUE ||
+         !MathIsValidNumber(stopLoss) ||
+         stopLoss == EMPTY_VALUE ||
+         volume <= 0.0 ||
+         openPrice <= 0.0 ||
+         stopLoss <= 0.0
+      )
          return -1.0;
 
       if(type == POSITION_TYPE_BUY)
@@ -75,8 +86,28 @@ private:
          return -1.0;
       }
 
+      if(
+         !MathIsValidNumber(profitToStop) ||
+         profitToStop == EMPTY_VALUE
+      )
+      {
+         return -1.0;
+      }
+
       protectedPosition = true;
-      return MathMax(0.0, -profitToStop);
+      const double riskMoney =
+         MathMax(0.0, -profitToStop);
+
+      if(
+         !MathIsValidNumber(riskMoney) ||
+         riskMoney == EMPTY_VALUE
+      )
+      {
+         protectedPosition = false;
+         return -1.0;
+      }
+
+      return riskMoney;
    }
 
 public:
@@ -114,7 +145,13 @@ public:
       const double equity = AccountInfoDouble(ACCOUNT_EQUITY);
       c.globalAccountEquity = equity;
 
-      if(equity <= 0.0)
+      if(
+         !MathIsValidNumber(equity) ||
+         equity == EMPTY_VALUE ||
+         equity <= 0.0 ||
+         !MathIsValidNumber(m_maxAggregateRiskPercent) ||
+         m_maxAggregateRiskPercent == EMPTY_VALUE
+      )
       {
          c.blockReason = ASTRA_BLOCK_INVALID_RISK;
          c.blockDescription = "Equity invalida para ExposureGate.";
@@ -128,6 +165,12 @@ public:
       // This prevents an inconsistent context riskAmount from understating
       // the real loss to the proposed Stop Loss.
       if(c.symbol == "" ||
+         !MathIsValidNumber(c.lotSize) ||
+         c.lotSize == EMPTY_VALUE ||
+         !MathIsValidNumber(c.entryPrice) ||
+         c.entryPrice == EMPTY_VALUE ||
+         !MathIsValidNumber(c.stopLoss) ||
+         c.stopLoss == EMPTY_VALUE ||
          c.lotSize <= 0.0 ||
          c.entryPrice <= 0.0 ||
          c.stopLoss <= 0.0 ||
@@ -156,8 +199,27 @@ public:
          c.blockDescription = "Nao foi possivel calcular com seguranca o risco da nova operacao.";
          return false;
       }
+      if(
+         !MathIsValidNumber(independentProposedRisk) ||
+         independentProposedRisk == EMPTY_VALUE
+      )
+      {
+         c.blockReason = ASTRA_BLOCK_INVALID_RISK;
+         c.blockDescription = "Risco proposto nao finito.";
+         return false;
+      }
 
       c.aggregateProposedRiskMoney = independentProposedRisk;
+
+      if(
+         !MathIsValidNumber(c.riskAmount) ||
+         c.riskAmount == EMPTY_VALUE
+      )
+      {
+         c.blockReason = ASTRA_BLOCK_INVALID_RISK;
+         c.blockDescription = "Risco contextual nao finito.";
+         return false;
+      }
 
       const double contextRiskMoney = MathMax(0.0, c.riskAmount);
       if(contextRiskMoney > 0.0)
@@ -194,7 +256,15 @@ public:
          const double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
          const double stopLoss = PositionGetDouble(POSITION_SL);
 
-         if(stopLoss <= 0.0)
+         if(
+            !MathIsValidNumber(volume) ||
+            volume == EMPTY_VALUE ||
+            !MathIsValidNumber(openPrice) ||
+            openPrice == EMPTY_VALUE ||
+            !MathIsValidNumber(stopLoss) ||
+            stopLoss == EMPTY_VALUE ||
+            stopLoss <= 0.0
+         )
          {
             c.blockReason = ASTRA_BLOCK_UNPROTECTED_POSITION;
             c.blockDescription =
@@ -223,6 +293,20 @@ public:
          c.aggregateCurrentRiskMoney += positionRisk;
       }
 
+      if(
+         !MathIsValidNumber(c.aggregateCurrentRiskMoney) ||
+         !MathIsValidNumber(c.aggregateProposedRiskMoney) ||
+         !MathIsValidNumber(c.maxAggregateRiskMoney) ||
+         c.aggregateCurrentRiskMoney == EMPTY_VALUE ||
+         c.aggregateProposedRiskMoney == EMPTY_VALUE ||
+         c.maxAggregateRiskMoney == EMPTY_VALUE
+      )
+      {
+         c.blockReason = ASTRA_BLOCK_INVALID_RISK;
+         c.blockDescription = "Exposicao agregada nao finita.";
+         return false;
+      }
+
       c.aggregateCurrentRiskPercent =
          (c.aggregateCurrentRiskMoney / equity) * 100.0;
       c.aggregateRiskMoney =
@@ -232,6 +316,24 @@ public:
 
       c.globalExposureMoney = c.aggregateRiskMoney;
       c.globalExposurePercent = c.aggregateRiskPercent;
+
+      if(
+         !MathIsValidNumber(c.aggregateCurrentRiskPercent) ||
+         !MathIsValidNumber(c.aggregateRiskMoney) ||
+         !MathIsValidNumber(c.aggregateRiskPercent) ||
+         !MathIsValidNumber(c.globalExposureMoney) ||
+         !MathIsValidNumber(c.globalExposurePercent) ||
+         c.aggregateCurrentRiskPercent == EMPTY_VALUE ||
+         c.aggregateRiskMoney == EMPTY_VALUE ||
+         c.aggregateRiskPercent == EMPTY_VALUE ||
+         c.globalExposureMoney == EMPTY_VALUE ||
+         c.globalExposurePercent == EMPTY_VALUE
+      )
+      {
+         c.blockReason = ASTRA_BLOCK_INVALID_RISK;
+         c.blockDescription = "Percentual de exposicao nao finito.";
+         return false;
+      }
 
       if(c.aggregateRiskPercent > m_maxAggregateRiskPercent + 1e-9)
       {

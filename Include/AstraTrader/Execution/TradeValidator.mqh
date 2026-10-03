@@ -562,6 +562,8 @@ public:
 
 
       if(
+         !c.IsValidNumericValue(tick.bid) ||
+         !c.IsValidNumericValue(tick.ask) ||
          tick.bid <= 0.0 ||
          tick.ask <= 0.0 ||
          tick.ask < tick.bid
@@ -589,7 +591,10 @@ public:
          );
 
 
-      if(c.point <= 0.0)
+      if(
+         !c.IsValidNumericValue(c.point) ||
+         c.point <= 0.0
+      )
       {
          return Reject(
             c,
@@ -839,6 +844,13 @@ public:
       //==============================================================
 
       if(
+         !c.IsValidNumericValue(c.entryPrice) ||
+         !c.IsValidNumericValue(c.stopLoss) ||
+         !c.IsValidNumericValue(c.takeProfit) ||
+         !c.IsValidNumericValue(c.riskReward) ||
+         !c.IsValidNumericValue(c.lotSize) ||
+         !c.IsValidNumericValue(c.riskPercent) ||
+         !c.IsValidNumericValue(c.riskAmount) ||
          c.entryPrice <= 0.0 ||
          c.stopLoss <= 0.0 ||
          c.takeProfit <= 0.0 ||
@@ -917,6 +929,9 @@ public:
 
 
       if(
+         !c.IsValidNumericValue(riskDistance) ||
+         !c.IsValidNumericValue(rewardDistance) ||
+         !c.IsValidNumericValue(calculatedRR) ||
          riskDistance <= 0.0 ||
          rewardDistance <= 0.0
       )
@@ -952,6 +967,18 @@ public:
          AccountInfoDouble(
             ACCOUNT_MARGIN_FREE
          );
+
+      if(
+         !c.IsValidNumericValue(freeMargin) ||
+         !c.IsValidNumericValue(c.maxAllowedMargin)
+      )
+      {
+         return Reject(
+            c,
+            ASTRA_BLOCK_MARGIN_INSUFFICIENT,
+            "trade_validation_non_finite_margin_data"
+         );
+      }
 
 
       const ENUM_ORDER_TYPE orderType =
@@ -989,6 +1016,15 @@ public:
             c,
             ASTRA_BLOCK_MARGIN_INSUFFICIENT,
             "trade_validation_margin_calculation_failed"
+         );
+      }
+
+      if(!c.IsValidNumericValue(requiredMargin))
+      {
+         return Reject(
+            c,
+            ASTRA_BLOCK_MARGIN_INSUFFICIENT,
+            "trade_validation_non_finite_required_margin"
          );
       }
 
