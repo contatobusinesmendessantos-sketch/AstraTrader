@@ -110,13 +110,15 @@ private:
       const double fvgBearLow,
       const double fvgScore,
       const ENUM_LAYER_STATE fvgState,
-      const bool orderBlockBullish,
-      const bool orderBlockBearish
+      const bool orderBlockEngineFvgBullish,
+      const bool orderBlockEngineFvgBearish,
+      const bool bullishOrderBlockPresent,
+      const bool bearishOrderBlockPresent
    ) const
    {
       const bool match =
-         fvgBullish == orderBlockBullish &&
-         fvgBearish == orderBlockBearish;
+         fvgBullish == orderBlockEngineFvgBullish &&
+         fvgBearish == orderBlockEngineFvgBearish;
 
       if(match)
       {
@@ -126,7 +128,10 @@ private:
             "FVGEngineValid=%s | FVGEngineBull=%s | FVGEngineBear=%s | "
             "FVGEngineBounds=%.8f/%.8f/%.8f/%.8f | "
             "FVGEngineScore=%.2f | FVGEngineState=%s | "
-            "OrderBlockBull=%s | OrderBlockBear=%s | "
+            "OrderBlockEngineFVGBull=%s | "
+            "OrderBlockEngineFVGBear=%s | "
+            "OrderBlockPresentBull=%s | "
+            "OrderBlockPresentBear=%s | "
             "fairValueGap=%s",
             c.symbol,
             EnumToString(c.primaryTF),
@@ -140,9 +145,39 @@ private:
             fvgBearLow,
             fvgScore,
             EnumToString(fvgState),
-            orderBlockBullish ? "true" : "false",
-            orderBlockBearish ? "true" : "false",
+            orderBlockEngineFvgBullish ? "true" : "false",
+            orderBlockEngineFvgBearish ? "true" : "false",
+            bullishOrderBlockPresent ? "true" : "false",
+            bearishOrderBlockPresent ? "true" : "false",
             c.fairValueGap ? "true" : "false"
+         );
+
+         return;
+      }
+
+      if(ArraySize(c.marketBars) < 4)
+      {
+         PrintFormat(
+            "[FVG_COMPARE] MISMATCH "
+            "Symbol=%s | TF=%s | Cycle=%I64u | "
+            "FourthBar=unavailable | "
+            "FVGEngineValid=%s | FVGEngineBull=%s | "
+            "FVGEngineBear=%s | "
+            "OrderBlockEngineFVGBull=%s | "
+            "OrderBlockEngineFVGBear=%s | "
+            "OrderBlockPresentBull=%s | "
+            "OrderBlockPresentBear=%s | "
+            "Reason=direction_flags_differ",
+            c.symbol,
+            EnumToString(c.primaryTF),
+            c.cycleId,
+            fvgValid ? "true" : "false",
+            fvgBullish ? "true" : "false",
+            fvgBearish ? "true" : "false",
+            orderBlockEngineFvgBullish ? "true" : "false",
+            orderBlockEngineFvgBearish ? "true" : "false",
+            bullishOrderBlockPresent ? "true" : "false",
+            bearishOrderBlockPresent ? "true" : "false"
          );
 
          return;
@@ -158,7 +193,10 @@ private:
          "FVGEngineValid=%s | FVGEngineBull=%s | FVGEngineBear=%s | "
          "FVGEngineBounds=%.8f/%.8f/%.8f/%.8f | "
          "FVGEngineScore=%.2f | FVGEngineState=%s | "
-         "OrderBlockBull=%s | OrderBlockBear=%s | "
+         "OrderBlockEngineFVGBull=%s | "
+         "OrderBlockEngineFVGBear=%s | "
+         "OrderBlockPresentBull=%s | "
+         "OrderBlockPresentBear=%s | "
          "OrderBlockBounds=unavailable | fairValueGap=%s | "
          "Reason=direction_flags_differ",
          c.symbol,
@@ -188,8 +226,10 @@ private:
          fvgBearLow,
          fvgScore,
          EnumToString(fvgState),
-         orderBlockBullish ? "true" : "false",
-         orderBlockBearish ? "true" : "false",
+         orderBlockEngineFvgBullish ? "true" : "false",
+         orderBlockEngineFvgBearish ? "true" : "false",
+         bullishOrderBlockPresent ? "true" : "false",
+         bearishOrderBlockPresent ? "true" : "false",
          c.fairValueGap ? "true" : "false"
       );
    }
@@ -2270,7 +2310,9 @@ public:
          fvgScoreBeforeOrderBlock,
          fvgStateBeforeOrderBlock,
          m_orderBlockEngine.HasBullishFVG(),
-         m_orderBlockEngine.HasBearishFVG()
+         m_orderBlockEngine.HasBearishFVG(),
+         m_orderBlockEngine.HasBullishOrderBlock(),
+         m_orderBlockEngine.HasBearishOrderBlock()
       );
 
 
